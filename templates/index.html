@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Aplikasi web deteksi penyakit gigi menggunakan AI — YOLO dan CNN ResNet-18 untuk mendeteksi dan mengklasifikasi karies gigi secara otomatis." />
+
+    <title>Deteksi Penyakit Gigi — AI Dental Detection</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
+</head>
+
+<body>
+    <!-- ═══════════════════════════════════════════════════
+         NAVBAR
+         ═══════════════════════════════════════════════════ -->
+    <nav class="navbar-main" id="main-navbar">
+        <div class="navbar-inner container-fluid">
+            <div class="navbar-brand-group">
+                <div class="navbar-logo-icon">
+                    <i class="bi bi-heart-pulse-fill"></i>
+                </div>
+                <div class="navbar-brand-text">
+                    <h1>DETEKSI PENYAKIT GIGI</h1>
+                    <span class="navbar-subtitle">AI-Powered Dental Disease Detection</span>
+                </div>
+            </div>
+            <div class="navbar-meta d-none d-md-flex">
+                <div class="navbar-meta-chip">
+                    <i class="bi bi-cpu"></i> YOLO + ResNet-18
+                </div>
+                <div class="navbar-meta-chip">
+                    <i class="bi bi-shield-check"></i> Medical AI
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════
+         MAIN CONTENT
+         ═══════════════════════════════════════════════════ -->
+    <main class="main-content">
+        <div class="container-fluid px-lg-4">
+            <div class="row g-4">
+
+                <!-- ─── SIDEBAR KIRI ────────────────────── -->
+                <aside class="col-lg-4 col-xl-3">
+                    <div class="sidebar-wrapper">
+
+                        <!-- Card: Upload & Kamera -->
+                        <div class="glass-card card-controls">
+                            <div class="card-header-custom">
+                                <i class="bi bi-upload"></i>
+                                <span>Input Gambar</span>
+                            </div>
+                            <div class="card-body-custom">
+                                <p class="control-hint">Unggah foto panoramik atau gunakan kamera untuk menangkap gambar gigi secara langsung.</p>
+
+                                <!-- Upload Button -->
+                                <label for="file-input" class="btn-upload" id="btn-upload-label">
+                                    <i class="bi bi-cloud-arrow-up-fill"></i>
+                                    <span>Upload Gambar</span>
+                                    <small>JPG, PNG, WEBP — max 16 MB</small>
+                                </label>
+                                <input type="file" id="file-input" accept="image/*" hidden />
+
+                                <!-- Camera Button -->
+                                <button class="btn-camera" id="btn-camera">
+                                    <i class="bi bi-camera-fill"></i>
+                                    <span>Buka Kamera</span>
+                                </button>
+
+                                <!-- Capture (hidden by default) -->
+                                <button class="btn-capture d-none" id="btn-capture">
+                                    <i class="bi bi-record-circle"></i>
+                                    <span>Ambil Foto</span>
+                                </button>
+
+                                <!-- Stop Camera (hidden by default) -->
+                                <button class="btn-stop-camera d-none" id="btn-stop-camera">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>Tutup Kamera</span>
+                                </button>
+
+                                <!-- Divider -->
+                                <div class="control-divider"></div>
+
+                                <!-- Analyze Button -->
+                                <button class="btn-analyze d-none" id="btn-analyze">
+                                    <i class="bi bi-search-heart"></i>
+                                    <span>Analisis Sekarang</span>
+                                    <div class="btn-analyze-shimmer"></div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card: Hasil Deteksi -->
+                        <div class="glass-card card-results" id="results-card">
+                            <div class="card-header-custom">
+                                <i class="bi bi-clipboard2-pulse"></i>
+                                <span>Hasil Deteksi</span>
+                            </div>
+                            <div class="card-body-custom">
+                                <!-- Placeholder sebelum analisis -->
+                                <div class="results-placeholder" id="results-placeholder">
+                                    <div class="placeholder-icon-wrapper">
+                                        <i class="bi bi-inbox"></i>
+                                    </div>
+                                    <p>Belum ada hasil analisis.<br />Unggah gambar dan klik <strong>"Analisis Sekarang"</strong> untuk memulai.</p>
+                                </div>
+
+                                <!-- Hasil (hidden by default) -->
+                                <div class="results-content d-none" id="results-content">
+                                    <!-- Diisi oleh JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </aside>
+
+                <!-- ─── VIEWPORT KANAN ──────────────────── -->
+                <section class="col-lg-8 col-xl-9">
+                    <div class="glass-card card-viewport">
+                        <div class="card-header-custom viewport-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-aspect-ratio"></i>
+                                <span>Viewport</span>
+                            </div>
+                            <div class="viewport-status" id="viewport-status">
+                                <span class="status-dot"></span>
+                                <span class="status-text">Menunggu Input</span>
+                            </div>
+                        </div>
+                        <div class="viewport-body" id="viewport-body">
+                            <!-- Empty State -->
+                            <div class="viewport-empty" id="viewport-empty">
+                                <div class="viewport-empty-icon">
+                                    <i class="bi bi-image"></i>
+                                    <div class="pulse-ring"></div>
+                                    <div class="pulse-ring delay"></div>
+                                </div>
+                                <h3>Tidak Ada Gambar</h3>
+                                <p>Unggah gambar gigi atau aktifkan kamera untuk memulai proses deteksi.</p>
+                            </div>
+
+                            <!-- Image Preview -->
+                            <img src="" alt="Preview gambar gigi" class="viewport-image d-none" id="viewport-image" />
+
+                            <!-- Camera Video Feed -->
+                            <video autoplay playsinline muted class="viewport-video d-none" id="viewport-video"></video>
+
+                            <!-- Hidden canvas for capturing -->
+                            <canvas id="capture-canvas" style="display:none;"></canvas>
+
+                            <!-- Loading Overlay -->
+                            <div class="viewport-loading d-none" id="viewport-loading">
+                                <div class="loading-spinner">
+                                    <div class="spinner-ring"></div>
+                                    <div class="spinner-ring inner"></div>
+                                    <i class="bi bi-search-heart spinner-icon"></i>
+                                </div>
+                                <p>Menganalisis gambar…</p>
+                                <small>YOLO Detection → ResNet-18 Classification</small>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════
+         FOOTER
+         ═══════════════════════════════════════════════════ -->
+    <footer class="app-footer">
+        <div class="container-fluid">
+            <p>&copy; 2026 Deteksi Penyakit Gigi &mdash; AI-Powered Research Project</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
